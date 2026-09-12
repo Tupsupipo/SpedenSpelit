@@ -1,0 +1,7 @@
+build/
+.vscode/
+arduino.json
+c_cpp_properties.json
+tasks.json
+diagram.json
+wokwi.toml  
