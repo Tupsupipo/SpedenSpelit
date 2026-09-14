@@ -19,9 +19,9 @@ void initButtonsAndButtonInterrupts(void)
       pinMode(pins[pin] ,INPUT_PULLUP);             // Arduino pinnit 50-53 INPUT_PULLUP tilaan
       if (DEBUG == true){  Serial.print("Button in PIN : ");Serial.print(pins[pin]);Serial.println(" intialized"); }
   }
-  // taitaa kuitenkin olla eri rekisterit, kuin UNOlla. Korvataan nämä muuttujalla, joka määritellään board.h tiedostossa laudan mukaan kuten napitkin. TODO selaa uudestaan datalehtiä.. 
-  PCICR = B00000001;    // PCIE0
-  PCMSK0 = B00001111;   // PCINT0-PCINT3 == pinnit 50-53 
+  // Haetaan alusta riippuvaiset rekisteriasetukset board.h tiedostosta.
+  PCICR = PCICR_SETTING;    //  (1 << PCIE0)
+  PCMSK0 = PCMSK0_SETTING;  
 
 }
 
