@@ -25,7 +25,10 @@ void setup()
     Serial.println(BOARD_NAME);
     initButtonsAndButtonInterrupts();
     startTheGame();
-
+    initializeLeds();
+    //TODO: käynnistysnappi
+    //odotellessa ledishow
+    
 }
 
 void loop()
@@ -46,8 +49,7 @@ void loop()
     if (DEBUG == true){  Serial.print("Random number: ");Serial.println(randomized);}
     
     // and corresponding let must be activated
-    setLed(randomized);                       // sytytetään satunnainen LED. Pelaajan pitäisi painaa vastaavaa nappia.
-    if (DEBUG == true){  Serial.print("Sytytetään LED: ");Serial.println(randomized);}
+    setLed(randomized);                       // sytytetään satunnainen LED. Pelaajan pitäisi painaa vastaavaa nappia. TODO: Lisää taulukkoon. Älä sytytä samaa LEDiä kuin edellisellä kierroksella. Painetaanko vastaavaa nappia. Tallennetaan nekin taulukkoon ja verrataan painojärjestystä.
 
   }
     if (buttonPinInterrupted !=0) {
