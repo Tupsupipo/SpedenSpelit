@@ -73,6 +73,7 @@ void initializeTimer(void)
   if (DEBUG == true){  Serial.println("Timer initialized");}
 
 }
+
 ISR(TIMER1_COMPA_vect)
 {
   /*
