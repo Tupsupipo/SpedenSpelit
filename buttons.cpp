@@ -1,6 +1,7 @@
 #include "buttons.h"
 #include "board.h"
 
+volatile byte buttonNumber = -1;  
 extern volatile bool DEBUG;
 volatile int buttonPinInterrupted = 0;
 volatile unsigned long viimeksi = 0;
@@ -31,11 +32,11 @@ ISR(PCINT0_vect) {
   unsigned long nyt = millis();
  // Megassa hieman ärsyttävästi hajallaan pinnit.. Tehdään oma käynnistysnapille, vain nämä vierekkäin tässä ryhmässä. Käynnistysnappi voidaan toteuttaa myös external keskeytyksenä, jolloin se ei ole riippuvainen alustasta. 
   for (int pin=0; pin<buttonAmount; pin++) {
-    //int pin = pins[pin];
     if (digitalRead(pins[pin]) == LOW) {
       if(nyt - viimeksi < debounceTime) return;  // debounce
         viimeksi = nyt;
         buttonPinInterrupted = pins[pin];
+        buttonNumber = pin;
     }
   }
 }
