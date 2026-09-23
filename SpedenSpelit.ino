@@ -6,27 +6,28 @@
 
 // Use these 2 volatile variables for communicating between
 // loop() function and interrupt handlers
-extern volatile byte buttonNumber;             // for buttons interrupt handler
+extern volatile byte buttonNumber;            // for buttons interrupt handler
 volatile bool newTimerInterrupt = false;      // for timer interrupt handler muutetaan kun tulee timer keskeytys
 bool DEBUG = true;                            // Debug muuttuja. Helpottanee asioiden tutkimista ja ylimääräisen roskan siivoamista lopuksi
-extern volatile int buttonPinInterrupted;             // Pinni joka muutti tilaansa
+extern volatile int buttonPinInterrupted;     // Pinni joka muutti tilaansa
 volatile static int interruptCount = 0;       // Lasketaan keskeytyksiä
 volatile static int interruptCountTotal = 0;  // Lasketaan keskeytyksien kokonaismäärä. 99 kipattava? vaiko pisteet alas ja uutta sataa lasiin?
 volatile int buttonsPressed[99];              // Taulukko nappien painalluksille.
 volatile int randomizedNumbers[99];           // Taulukko satunnaisille numeroille, jotka määrittävät syttyvän LEDin ja pelaajan painettavan napin.
 volatile int buttonPressIndex = 0;            // Lasketaan pelaajan painallusten indeksiä taulukkoon vertailua varten. 
 volatile int randomizedLedIndex = 0;          // Lasketaan satunnaister numeroiden indeksiä taulukkoon vertailua varten.
-
+volatile int randomized = 0;                  // Muuttuja satunnaisten lukujen generointiin.
 
 void setup()
 {
   /*
-    Initialize here all modules
+  Initialize here all modules
   */
-    Serial.begin(9600);
-    // Näitä varmaan siirrellää sopivampiin paikkoihin. Testiä
-    Serial.print("Alustaksi maaritetty: ");
-    Serial.println(BOARD_NAME);
+ Serial.begin(9600);
+ // Näitä varmaan siirrellää sopivampiin paikkoihin. Testiä
+ Serial.print("Alustaksi maaritetty: ");
+ Serial.println(BOARD_NAME);
+    randomSeed(analogRead(A0));                            // käytetään analogRead(A0) randomin siemenlukuna. Tyhjän analogisen pinni A0 lukeminen antaa satunnaisen arvon, joka on hyvä siemenluku random() funktiolle.
     initButtonsAndButtonInterrupts();
     initializeLeds();
     startTheGame();
@@ -57,15 +58,29 @@ void loop()
     interruptHandler();
 
     // new random number must be generated
-    randomSeed(analogRead(A0));                            // käytetään analogRead(A0) randomin siemenlukuna. Tyhjän analogisen pinni A0 lukeminen antaa satunnaisen arvon, joka on hyvä siemenluku random() funktiolle.
-    int randomized = random(4);                           // random() funktio palauttaa satunnaisen luvun 0,1,2 tai 3. Tämä luku on seuraava syttyvä LED ja nappi jota pelaajan pitäisi painaa.
-    if (DEBUG == true){  Serial.print("Random number: ");Serial.println(randomized);}
-    
-    // and corresponding let must be activated
-    setLed(randomized);                                   // sytytetään satunnainen LED. Pelaajan pitäisi painaa vastaavaa nappia. TODO: Lisää taulukkoon. Älä sytytä samaa LEDiä kuin edellisellä kierroksella. Painetaanko vastaavaa nappia. Tallennetaan nekin taulukkoon ja verrataan painojärjestystä.
-    randomizedNumbers[randomizedLedIndex] = randomized;   // tallennetaan satunnainen numero taulukkoon vertailua varten
-    randomizedLedIndex++;                                 // kasvatetaan indeksiä taulukkoon
+    int randomized = random(4);                                     // Muuttuja satunnaisten lukujen generointiin. Random() funktio palauttaa satunnaisen luvun 0,1,2 tai 3. Tämä luku on seuraava syttyvä LED ja nappi jota pelaajan pitäisi painaa.
+    int prevRandom = -1;                                            // Edellinen satunnainen luku. Tämän hetkinen indexi -1
+    if (randomizedLedIndex > 0) {                                   // Tarkistetaan, että sama LED ei syty uudestaan. Jos syttyy, generoidaan uusi satunnainen luku.
+      prevRandom = randomizedNumbers[randomizedLedIndex - 1];       // Haetaan edellinen satunnainen luku taulukosta
+      while (randomized == prevRandom) {                            // Jos sama luku, generoidaan uusi satunnainen luku, kunnes saadaan eri luku.
+        randomized = random(4);
+      }
+    }
 
+    // and corresponding let must be activated
+    setLed(randomized);                                           // sytytetään satunnainen LED. Pelaajan pitäisi painaa vastaavaa nappia. TODO: Lisää taulukkoon. Älä sytytä samaa LEDiä kuin edellisellä kierroksella. Painetaanko vastaavaa nappia. Tallennetaan nekin taulukkoon ja verrataan painojärjestystä.
+    randomizedNumbers[randomizedLedIndex] = randomized;           // tallennetaan satunnainen numero taulukkoon vertailua varten
+
+    if (DEBUG == true){  Serial.print("Random number: ");Serial.println(randomized);}
+    Serial.print("List of random numbers: ");
+    for (int i = 0; i <= randomizedLedIndex; i++) {
+      Serial.print(randomizedNumbers[i]);
+      Serial.print(" ");
+    }
+    Serial.println();
+
+    randomizedLedIndex++;                                 // kasvatetaan indeksiä taulukkoon
+    
   }
     if (buttonPinInterrupted !=0) {
       Serial.print("PCINT0 vaylasta keskeytys pinnista HIGH to LOW = ");
@@ -106,11 +121,11 @@ void checkGame(byte buttonIndex)
 {
 //  for (int i = 0; i < buttonIndex; i++) {
     if (randomizedNumbers[buttonIndex] == buttonsPressed[buttonIndex]) {
-      if (DEBUG == true){ Serial.print("Pelaaja painoi oikeaa nappia: "); Serial.println(buttonsPressed[buttonIndex]);}
+      if (DEBUG == true){ Serial.print("Pelaaja painoi oikeaa nappia: "); Serial.println(buttonsPressed[buttonIndex]); Serial.print("INDEX: "); Serial.println(buttonIndex); }
       return;
     } 
     else {
-      if (DEBUG == true){ Serial.print("Väärää nappi: "); Serial.println(buttonsPressed[buttonIndex]);}
+      if (DEBUG == true){ Serial.print("Väärää nappi: "); Serial.print(buttonsPressed[buttonIndex]); Serial.print("INDEX: "); Serial.println(buttonIndex); }
       gameOver();  // Väärää nappi. Peli loppuu.
     }
  // }
