@@ -6,6 +6,7 @@
 
 // Use these 2 volatile variables for communicating between
 // loop() function and interrupt handlers
+volatile bool gameRunning = false;            // Peli alkaa kun käynnistysnappia painettu.
 extern volatile byte buttonNumber;            // for buttons interrupt handler
 volatile bool newTimerInterrupt = false;      // for timer interrupt handler muutetaan kun tulee timer keskeytys
 bool DEBUG = true;                            // Debug muuttuja. Helpottanee asioiden tutkimista ja ylimääräisen roskan siivoamista lopuksi
@@ -16,7 +17,7 @@ volatile int buttonsPressed[99];              // Taulukko nappien painalluksille
 volatile int randomizedNumbers[99];           // Taulukko satunnaisille numeroille, jotka määrittävät syttyvän LEDin ja pelaajan painettavan napin.
 volatile int buttonPressIndex = 0;            // Lasketaan pelaajan painallusten indeksiä taulukkoon vertailua varten. 
 volatile int randomizedLedIndex = 0;          // Lasketaan satunnaister numeroiden indeksiä taulukkoon vertailua varten.
-volatile int randomized = 0;                  // Muuttuja satunnaisten lukujen generointiin.
+
 
 void setup()
 {
@@ -30,10 +31,7 @@ void setup()
     randomSeed(analogRead(A0));                            // käytetään analogRead(A0) randomin siemenlukuna. Tyhjän analogisen pinni A0 lukeminen antaa satunnaisen arvon, joka on hyvä siemenluku random() funktiolle.
     initButtonsAndButtonInterrupts();
     initializeLeds();
-    startTheGame();
-    //TODO: käynnistysnappi
-    //odotellessa ledishow
-    
+        
 }
 
 void loop()
@@ -41,19 +39,31 @@ void loop()
   if(buttonNumber>=0)
   {
      // start the game if buttonNumber == 4
+    if (buttonNumber == 4) { 
+        startTheGame();                                   // Käynnistetään peli. Peli alkaa, kun start button painetaan.
+        if (DEBUG == true){  Serial.println("Käynnistetään peliä.");}
+        buttonNumber = -1;                                // resetoidaan buttonNumber
+    }
      // check the game if 0<=buttonNumber<4
-      if (buttonNumber < 4) {
+    if (buttonNumber < 4) {
         buttonsPressed[buttonPressIndex] = buttonNumber;  // tallennetaan pelaajan painallus taulukkoon vertailua varten
         checkGame(buttonPressIndex);                      // tarkistetaan painallus
         buttonPressIndex++;                               // kasvatetaan indeksiä taulukkoon
         if (DEBUG == true){  Serial.print("Nappia painettu: ");Serial.println(buttonNumber);}
         buttonNumber = -1;                                // resetoidaan buttonNumber
       
-        }
-     }
+    }
+  }
+
+  if (gameRunning == false) {
+      if (DEBUG == true){  Serial.println("Peli ei vielä käynnissä. Näytetään valoshow");}
+      //odotellessa ledishow
+      show1();  
+
+  } 
   
 
-  if(newTimerInterrupt == true)
+  if(newTimerInterrupt && gameRunning)
   {
     interruptHandler();
 
@@ -72,13 +82,12 @@ void loop()
     randomizedNumbers[randomizedLedIndex] = randomized;           // tallennetaan satunnainen numero taulukkoon vertailua varten
 
     if (DEBUG == true){  Serial.print("Random number: ");Serial.println(randomized);}
-    Serial.print("List of random numbers: ");
+    Serial.print("randomizedNumbers: ");
     for (int i = 0; i <= randomizedLedIndex; i++) {
       Serial.print(randomizedNumbers[i]);
       Serial.print(" ");
     }
     Serial.println();
-
     randomizedLedIndex++;                                 // kasvatetaan indeksiä taulukkoon
     
   }
@@ -128,20 +137,6 @@ void checkGame(byte buttonIndex)
       if (DEBUG == true){ Serial.print("Väärää nappi: "); Serial.print(buttonsPressed[buttonIndex]); Serial.print("INDEX: "); Serial.println(buttonIndex); }
       gameOver();  // Väärää nappi. Peli loppuu.
     }
- // }
-	// see requirements for the function from SpedenSpelit.h
-  /*
-  checkGame() subroutine is used to check the status
-  of the Game after each player button press.
-  
-  If the latest player button press is wrong, the game stops
-  and if the latest press was right, game display is incremented
-  by 1.
-  
-  Parameters
-  byte lastButtonPress of the player 0 or 1 or 2 or 3
-  
-*/
 }
 
 
@@ -150,6 +145,8 @@ void initializeGame()
 	// see requirements for the function from SpedenSpelit.h
   buttonPressIndex = 0;            // Nollataan pelaajan painallusten indeksi pelin alussa.
   randomizedLedIndex = 0;          // Nollataan satunnaisten numeroiden indeksi pelin alussa.
+  interruptCount = 0;              // Nollataan keskeytyslaskuri pelin alussa
+  interruptCountTotal = 0;         // Nollataan keskeytyslaskuri pelin alussa         
     if (DEBUG == true){  Serial.println("initializeGame() initialized");}
 
   
@@ -159,6 +156,7 @@ void startTheGame()
 {
    // see requirements for the function from SpedenSpelit.h
     if (DEBUG == true){  Serial.println("startTheGame() initialized");}
+    gameRunning = true; 
     initializeTimer();
     initializeGame();
 
@@ -166,13 +164,16 @@ void startTheGame()
 
 void gameOver()
 {
+  // Mieti miten peli lopetetaan
+  gameRunning = false;
 
 }
 
 void interruptHandler() {
-    newTimerInterrupt = false;
-    interruptCount++;
-    interruptCountTotal++;
+  if (gameRunning) {
+      newTimerInterrupt = false;
+      interruptCount++;
+      interruptCountTotal++;
 
     if (DEBUG == true){
       Serial.print("Keskeytys: ");
@@ -186,3 +187,4 @@ void interruptHandler() {
       if  (DEBUG == true){  Serial.print("SpeedyGonzales: "); Serial.println(OCR1A);}
     }
   }
+}
