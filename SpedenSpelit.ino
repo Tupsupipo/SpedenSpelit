@@ -10,27 +10,27 @@ volatile bool gameRunning = false;            // Peli alkaa kun käynnistysnappi
 extern volatile byte buttonNumber;            // for buttons interrupt handler
 volatile bool newTimerInterrupt = false;      // for timer interrupt handler muutetaan kun tulee timer keskeytys
 bool DEBUG = true;                            // Debug muuttuja. Helpottanee asioiden tutkimista ja ylimääräisen roskan siivoamista lopuksi
-extern volatile int buttonPinInterrupted;     // Pinni joka muutti tilaansa
-volatile static int interruptCount = 0;       // Lasketaan keskeytyksiä
-volatile static int interruptCountTotal = 0;  // Lasketaan keskeytyksien kokonaismäärä. 99 kipattava? vaiko pisteet alas ja uutta sataa lasiin?
-volatile int buttonsPressed[99];              // Taulukko nappien painalluksille.
-volatile int randomizedNumbers[99];           // Taulukko satunnaisille numeroille, jotka määrittävät syttyvän LEDin ja pelaajan painettavan napin.
-volatile int buttonPressIndex = 0;            // Lasketaan pelaajan painallusten indeksiä taulukkoon vertailua varten. 
-volatile int randomizedLedIndex = 0;          // Lasketaan satunnaister numeroiden indeksiä taulukkoon vertailua varten.
-
+extern volatile byte buttonPinInterrupted;     // Pinni joka muutti tilaansa
+volatile static byte interruptCount = 0;       // Lasketaan keskeytyksiä
+volatile static byte interruptCountTotal = 0;  // Lasketaan keskeytyksien kokonaismäärä. 99 kipattava? vaiko pisteet alas ja uutta sataa lasiin?
+byte buttonsPressed[99];              // Taulukko nappien painalluksille.
+byte randomizedNumbers[99];           // Taulukko satunnaisille numeroille, jotka määrittävät syttyvän LEDin ja pelaajan painettavan napin.
+byte buttonPressIndex = 0;            // Lasketaan pelaajan painallusten indeksiä taulukkoon vertailua varten. 
+byte randomizedLedIndex = 0;          // Lasketaan satunnaister numeroiden indeksiä taulukkoon vertailua varten.
+//byte score = 0;                       // Pisteet. Pisteet nollataan pelin alussa.     BUTTONPRESSINDEX TUOTTAA SAMAN TULOKSEN? TURHA
 
 void setup()
 {
   /*
   Initialize here all modules
   */
- Serial.begin(9600);
- // Näitä varmaan siirrellää sopivampiin paikkoihin. Testiä
- Serial.print("Alustaksi maaritetty: ");
- Serial.println(BOARD_NAME);
-    randomSeed(analogRead(A0));                            // käytetään analogRead(A0) randomin siemenlukuna. Tyhjän analogisen pinni A0 lukeminen antaa satunnaisen arvon, joka on hyvä siemenluku random() funktiolle.
-    initButtonsAndButtonInterrupts();
-    initializeLeds();
+  Serial.begin(9600);
+  // Näitä varmaan siirrellää sopivampiin paikkoihin. Testiä
+  Serial.print("Alustaksi maaritetty: ");
+  Serial.println(BOARD_NAME);
+  randomSeed(analogRead(A0));                            // käytetään analogRead(A0) randomin siemenlukuna. Tyhjän analogisen pinni A0 lukeminen antaa satunnaisen arvon, joka on hyvä siemenluku random() funktiolle.
+  initButtonsAndButtonInterrupts();
+  initializeLeds();
         
 }
 
@@ -42,7 +42,7 @@ void loop()
     if (buttonNumber == 4) { 
         startTheGame();                                   // Käynnistetään peli. Peli alkaa, kun start button painetaan.
         if (DEBUG == true){  Serial.println("Käynnistetään peliä.");}
-        buttonNumber = -1;                                // resetoidaan buttonNumber
+        buttonNumber = 255;                                // resetoidaan buttonNumber BYTE viimeiseksi numeroksi
     }
      // check the game if 0<=buttonNumber<4
     if (buttonNumber < 4) {
@@ -50,26 +50,25 @@ void loop()
         checkGame(buttonPressIndex);                      // tarkistetaan painallus
         buttonPressIndex++;                               // kasvatetaan indeksiä taulukkoon
         if (DEBUG == true){  Serial.print("Nappia painettu: ");Serial.println(buttonNumber);}
-        buttonNumber = -1;                                // resetoidaan buttonNumber
-      
+        buttonNumber = 255;                                // resetoidaan buttonNumber BYTE viimeiseksi numeroksi
     }
   }
 
   if (gameRunning == false) {
       if (DEBUG == true){  Serial.println("Peli ei vielä käynnissä. Näytetään valoshow");}
       //odotellessa ledishow
-      show1();  
-
+      show1(); 
+      delay(500); 
   } 
   
 
   if(newTimerInterrupt && gameRunning)
   {
-    interruptHandler();
+    interruptHandler();                                             // Kutsutaan keskeytyksien käsittelijää, jossa hoidetaan keskeytysten laskenta ja pelinouden kiihdytys
 
     // new random number must be generated
-    int randomized = random(4);                                     // Muuttuja satunnaisten lukujen generointiin. Random() funktio palauttaa satunnaisen luvun 0,1,2 tai 3. Tämä luku on seuraava syttyvä LED ja nappi jota pelaajan pitäisi painaa.
-    int prevRandom = -1;                                            // Edellinen satunnainen luku. Tämän hetkinen indexi -1
+    byte randomized = random(4);                                    // Muuttuja satunnaisten lukujen generointiin. Random() funktio palauttaa satunnaisen luvun 0,1,2 tai 3. Tämä luku on seuraava syttyvä LED ja nappi jota pelaajan pitäisi painaa.
+    int8_t prevRandom = -1;                                         // Edellinen satunnainen luku. Tämän hetkinen indexi -1
     if (randomizedLedIndex > 0) {                                   // Tarkistetaan, että sama LED ei syty uudestaan. Jos syttyy, generoidaan uusi satunnainen luku.
       prevRandom = randomizedNumbers[randomizedLedIndex - 1];       // Haetaan edellinen satunnainen luku taulukosta
       while (randomized == prevRandom) {                            // Jos sama luku, generoidaan uusi satunnainen luku, kunnes saadaan eri luku.
@@ -83,7 +82,7 @@ void loop()
 
     if (DEBUG == true){  Serial.print("Random number: ");Serial.println(randomized);}
     Serial.print("randomizedNumbers: ");
-    for (int i = 0; i <= randomizedLedIndex; i++) {
+    for (byte i = 0; i <= randomizedLedIndex; i++) {
       Serial.print(randomizedNumbers[i]);
       Serial.print(" ");
     }
@@ -122,20 +121,20 @@ ISR(TIMER1_COMPA_vect)
   Increase timer interrupt rate after 10 interrupts.
   */
   newTimerInterrupt = true;   // ilmoitetaan loopille ja interruptHandelrille uudesta keskeytyksestä
-
 }
 
 
 void checkGame(byte buttonIndex)
 {
-//  for (int i = 0; i < buttonIndex; i++) {
-    if (randomizedNumbers[buttonIndex] == buttonsPressed[buttonIndex]) {
-      if (DEBUG == true){ Serial.print("Pelaaja painoi oikeaa nappia: "); Serial.println(buttonsPressed[buttonIndex]); Serial.print("INDEX: "); Serial.println(buttonIndex); }
-      return;
-    } 
-    else {
-      if (DEBUG == true){ Serial.print("Väärää nappi: "); Serial.print(buttonsPressed[buttonIndex]); Serial.print("INDEX: "); Serial.println(buttonIndex); }
-      gameOver();  // Väärää nappi. Peli loppuu.
+
+  if (randomizedNumbers[buttonIndex] == buttonsPressed[buttonIndex]) {
+    if (DEBUG == true){ Serial.print("Pelaaja painoi oikeaa nappia: "); Serial.print(buttonsPressed[buttonIndex]); Serial.print("  INDEX: "); Serial.println(buttonIndex); }
+    //score++;  // Pelaaja painoi oikeaa nappia. Pisteet nousevat yhdellä.        Taitaa olla fiksumpaa käyttää buttonpressindexiä. Turha muuttuja
+    return;
+  } 
+  else {
+    if (DEBUG == true){ Serial.print("Väärää nappi: "); Serial.print(buttonsPressed[buttonIndex]); Serial.print("  INDEX: "); Serial.println(buttonIndex); }
+    gameOver();  // Väärää nappi. Peli loppuu.
     }
 }
 
@@ -143,10 +142,11 @@ void checkGame(byte buttonIndex)
 void initializeGame()
 {
 	// see requirements for the function from SpedenSpelit.h
-  buttonPressIndex = 0;            // Nollataan pelaajan painallusten indeksi pelin alussa.
-  randomizedLedIndex = 0;          // Nollataan satunnaisten numeroiden indeksi pelin alussa.
-  interruptCount = 0;              // Nollataan keskeytyslaskuri pelin alussa
-  interruptCountTotal = 0;         // Nollataan keskeytyslaskuri pelin alussa         
+    buttonPressIndex = 0;            // Nollataan pelaajan painallusten indeksi pelin alussa.
+    randomizedLedIndex = 0;          // Nollataan satunnaisten numeroiden indeksi pelin alussa.
+    interruptCount = 0;              // Nollataan keskeytyslaskuri pelin alussa
+    interruptCountTotal = 0;         // Nollataan keskeytyslaskuri pelin alussa    
+//    score = 0;                       // Nollataan pisteet pelin alussa     
     if (DEBUG == true){  Serial.println("initializeGame() initialized");}
 
   
@@ -165,8 +165,11 @@ void startTheGame()
 void gameOver()
 {
   // Mieti miten peli lopetetaan
-  gameRunning = false;
-
+  Serial.print("Game Over. Pisteesi: ");
+  Serial.println(buttonPressIndex);  
+    showResult(buttonPressIndex);
+    gameRunning = false;
+    show2(3);  // Näytetään valoshow pelin lopuksi
 }
 
 void interruptHandler() {
