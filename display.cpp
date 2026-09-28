@@ -1,8 +1,9 @@
-#include "display.h"
+#include "display.h"            
 
 
 void initializeDisplay(void)
 {
+
 // See requirements for this function from display.h
 }
 
@@ -10,6 +11,7 @@ void initializeDisplay(void)
 void writeByte(uint8_t bits,bool last)
 {
 // See requirements for this function from display.h
+
 }
 
 

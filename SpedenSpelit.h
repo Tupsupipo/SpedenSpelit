@@ -43,5 +43,8 @@ void checkGame(byte);
 */
 void startTheGame(void);
 
+void gameOver(void);
+
+void interruptHandler(void); 
 
 #endif

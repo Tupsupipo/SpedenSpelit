@@ -1,12 +1,12 @@
 #include "buttons.h"
 #include "board.h"
 
-volatile byte buttonNumber = -1;  
+volatile byte buttonNumber = 255;                         //resetoidaan nappi BYTE viimeiseksi numeroksi. Selvempää logiikan kannalta, kuin int8_t "-1". Ei tarvita ylimääräistä ehtoa looppiin
 extern volatile bool DEBUG;
-volatile int buttonPinInterrupted = 0;
+volatile byte buttonPinInterrupted = 0;
 volatile unsigned long viimeksi = 0;
 volatile unsigned long debounceTime = 300;
-const int buttonAmount = sizeof(pins)/sizeof(pins[0]);
+const byte buttonAmount = sizeof(pins)/sizeof(pins[0]);
 
 void initButtonsAndButtonInterrupts(void)
 {
@@ -16,7 +16,7 @@ void initButtonsAndButtonInterrupts(void)
   pinMode(startButtonPin, INPUT_PULLUP);  // Start button pin. 
   if (DEBUG == true){  Serial.print("startButton in PIN : ");Serial.print(startButtonPin);Serial.println(" intialized"); }
 
-  for(int pin=0; pin<buttonAmount; pin++) {         // Määritetään pelinappien pinnit. 
+  for(byte pin=0; pin<buttonAmount; pin++) {         // Määritetään pelinappien pinnit. 
       pinMode(pins[pin] ,INPUT_PULLUP);             // Pinnit board.h:ssa määritellystä taulukosta. Alusta riippuvainen. MEGA2560:lla 50,51,52,53. UNO:lla 2,3,4,5.
       if (DEBUG == true){  Serial.print("Button in PIN : ");Serial.print(pins[pin]);Serial.println(" intialized"); }
   }
@@ -31,7 +31,7 @@ void initButtonsAndButtonInterrupts(void)
 ISR(PCINT0_vect) {
   unsigned long nyt = millis();
  // Katsotaan mitä nappia painettiin. Hylätään liian nopea painallus.
-  for (int pin=0; pin<buttonAmount; pin++) {
+  for (byte pin=0; pin<buttonAmount; pin++) {
     if (digitalRead(pins[pin]) == LOW) {
       if(nyt - viimeksi < debounceTime) return;  // debounce
         viimeksi = nyt;
@@ -57,6 +57,6 @@ ISR(PCINT1_vect) {
       if(nyt - viimeksi < debounceTime) return;  // debounce
         viimeksi = nyt;
         buttonPinInterrupted = startButtonPin;
-        buttonNumber = 4;  // Käynnistysnappi on index 4, koska pelinappien indeksit ovat 0-3.
+        buttonNumber = 4;  // Käynnistysnappi on index 4
   }
 }
