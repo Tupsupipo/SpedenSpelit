@@ -44,7 +44,7 @@ void show1()
 {
   // Kirjoitetaan numerot 0-15 binääriesityksenä ledeillä
   for (byte i = 0; i <= 15; i++) {
-    if (buttonNumber <= 4) {  // Jos start nappia painetaan, lopetetaan LED-show
+    if (buttonNumber == 4) {  // Jos start nappia painetaan, lopetetaan LED-show
       clearAllLeds(); // Sammutetaan ledit ennen poistumista
         return;  // Poistu heti LED-showsta
     }
@@ -59,7 +59,7 @@ void show1()
     // Pieni viive, jotta binääriluvut erottaa toisistaan
     // 400 ms viive, mutta tarkistetaan nappi 1 ms välein. Muutin jotta päästään poistumaan showsta nopeasti, jos start nappia painetaan.
     for (int t = 0; t < 400; t++) {
-      if (buttonNumber <= 4) {  // Jos start nappia painetaan, lopetetaan LED-show
+      if (buttonNumber == 4) {  // Jos start nappia painetaan, lopetetaan LED-show
         clearAllLeds();
         return;
       }
