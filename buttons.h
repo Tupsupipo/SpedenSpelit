@@ -20,13 +20,9 @@ const byte lastPin =  5; // Last PinChangeInterrupt on D-bus
 
 */
 void initButtonsAndButtonInterrupts(void);
-
+void debouncer(byte lastButtonPin, byte pinIndex);
 
 // Intoduce PCINT0_vect Interrupt SeRvice (ISR) function for Pin Change Interrupt.
 ISR(PCINT0_vect); 
-// Intoduce PCINT1_vect Interrupt SeRvice (ISR) function for Pin Change Interrupt.
-ISR(PCINT1_vect); 
-// Intoduce PCINT2_vect Interrupt SeRvice (ISR) function for Pin Change Interrupt. EI KÄYTÖSSÄ
-ISR(PCINT2_vect); 
 
 #endif;
