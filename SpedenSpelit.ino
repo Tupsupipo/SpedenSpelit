@@ -192,7 +192,7 @@ void startSleep() {
   
   delay(500); //lisä debouncea, ettei start nappi herätä laitetta heti uudestaan. Alkuperäinen debounce on kulunut jo aikoja sitten.
 
-  cli();                          // Sammutetaan keskeytykset ongelmien välttämiseksi. Rekisteri voi korruptoitua, jos keskeytys sattuisi asetuksia vaihtaessa.
+  cli();                          // Sammutetaan keskeytykset ongelmien välttämiseksi.
   byte TIMSK1_backup = TIMSK1;     // Tallennetaan keskeytykset talteen, jotta voidaan palauttaa ne herätyksen jälkeen
   byte TCCR1B_backup = TCCR1B;      
   TIMSK1 = 0;                     // Sammutetaan Timer1 keskeytykset
@@ -202,7 +202,6 @@ void startSleep() {
   
   set_sleep_mode(SLEEP_MODE_PWR_DOWN);
   
-
   Serial.flush();
   gameOver(); 
   clearDisplay();
@@ -212,9 +211,9 @@ void startSleep() {
 
   sleep_disable();
 
-  cli();                          // Sammutetaan keskeytykset ongelmien välttämiseksi. Rekisteri voi korruptoitua, jos keskeytys sattuisi asetuksia vaihtaessa.
-  TCCR1B = TCCR1B_backup;         
-  TIMSK1 = TIMSK1_backup;         // Palautetaan keskeytysten tila ennalleen
+  cli();                          // Sammutetaan keskeytykset ongelmien välttämiseksi.
+  TCCR1B = TCCR1B_backup;         // Palautetaan keskeytysten tila ennalleen
+  TIMSK1 = TIMSK1_backup;         
   sei();                          // Keskeytykset takaisin päälle
 
   show2(3);
