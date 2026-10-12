@@ -59,4 +59,8 @@ void writeHighAndLowNumber(uint8_t tens,uint8_t ones);
 */
 void showResult(byte result);
 
+
+// sammutetaan näyttö lepotilaa varten.
+void clearDisplay(void); 
+
 #endif

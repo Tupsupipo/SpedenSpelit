@@ -1,62 +1,41 @@
 #include "buttons.h"
 #include "board.h"
 
+const byte buttonAmount = sizeof(pins)/sizeof(pins[0]);
 volatile byte buttonNumber = 255;                         //resetoidaan nappi BYTE viimeiseksi numeroksi. Selvempää logiikan kannalta, kuin int8_t "-1". Ei tarvita ylimääräistä ehtoa looppiin
-extern volatile bool DEBUG;
 volatile byte buttonPinInterrupted = 0;
 volatile unsigned long viimeksi = 0;
-volatile unsigned long debounceTime = 300;
-const byte buttonAmount = sizeof(pins)/sizeof(pins[0]);
+volatile unsigned long debounceTime = 245;                // Isot napit pitkällä jousella. Debounce aika on siitä johtuen näin pitkä. Peli nopeus maksimissaan noin 350ms kieppeilläm, joten ei vielä ongelma
+
 
 void initButtonsAndButtonInterrupts(void)
 {
   // See requirements for this function from buttons.h
-  // MEGA2560 toimii hieman erilailla, kuin UNO. Molempien pitäisi toimia samoilla rekisteriasetuksilla, jos määritellään pinnit molemmille omiksi.
-
-  pinMode(startButtonPin, INPUT_PULLUP);  // Start button pin. 
-  if (DEBUG == true){  Serial.print("startButton in PIN : ");Serial.print(startButtonPin);Serial.println(" intialized"); }
 
   for(byte pin=0; pin<buttonAmount; pin++) {         // Määritetään pelinappien pinnit. 
       pinMode(pins[pin] ,INPUT_PULLUP);             // Pinnit board.h:ssa määritellystä taulukosta. Alusta riippuvainen. MEGA2560:lla 50,51,52,53. UNO:lla 2,3,4,5.
-      if (DEBUG == true){  Serial.print("Button in PIN : ");Serial.print(pins[pin]);Serial.println(" intialized"); }
   }
   // Haetaan alusta riippuvaiset rekisteriasetukset board.h tiedostosta.
-  PCICR = PCICR_SETTING;    //  (1 << PCIE0)
+  PCICR = PCICR_SETTING;   
   PCMSK0 = PCMSK0_SETTING;  
-  PCMSK1 = PCMSK1_SETTING;
-
 }
 
+void debouncer(byte lastButtonPin, byte pinIndex) {
+    unsigned long nyt = millis();
+
+    if(nyt - viimeksi < debounceTime) return;  // debounce
+      viimeksi = nyt;
+      buttonPinInterrupted = lastButtonPin;
+      buttonNumber = pinIndex;
+    
+}
 
 ISR(PCINT0_vect) {
-  unsigned long nyt = millis();
+
  // Katsotaan mitä nappia painettiin. Hylätään liian nopea painallus.
   for (byte pin=0; pin<buttonAmount; pin++) {
     if (digitalRead(pins[pin]) == LOW) {
-      if(nyt - viimeksi < debounceTime) return;  // debounce
-        viimeksi = nyt;
-        buttonPinInterrupted = pins[pin];
-        buttonNumber = pin;
+        debouncer(pins[pin], pin);
     }
-  }
-}
-
-ISR(PCINT2_vect) {
-   /* Korvattu PCINT0lla, joka pitäisi toimia myös UNOlla.
-     Here you implement logic for handling
-	 interrupts from 2,3,4,5 pins for Game push buttons
-	 and for pin 6 for start Game push button.
-   */
-}
-
-ISR(PCINT1_vect) {
-  unsigned long nyt = millis();
-   // Käynnistysnappi UNO:lle. PCINT8 Sijaitsee PCIE1 ryhmässä, joten pitää käyttää PCINT1_vect keskeytystä.
-  if (digitalRead(startButtonPin) == LOW) {
-    if (DEBUG == true){  Serial.println("Käynnistysnappi painettu");}
-      if(nyt - viimeksi < debounceTime) return;  // debounce
-        viimeksi = nyt;
-        buttonPinInterrupted = startButtonPin;
-        buttonNumber = 4;  // Käynnistysnappi on index 4
   }
 }

@@ -48,4 +48,7 @@ void show1(void);
 */
 void show2(int);
 
+// show 3 sammutusta varten
+void show3(byte);
+
 #endif

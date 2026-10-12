@@ -3,6 +3,8 @@
 #include <Arduino.h>
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
+#include <avr/power.h>
 
 /*
   initializeTimer() subroutine intializes Arduino Timer1 module to
@@ -47,4 +49,5 @@ void gameOver(void);
 
 void interruptHandler(void); 
 
+void startSleep(void);
 #endif
