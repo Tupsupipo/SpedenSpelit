@@ -8,8 +8,8 @@
 // Use these 2 volatile variables for communicating between
 // loop() function and interrupt handlers
 volatile bool gameRunning = false;              // Peli alkaa kun käynnistysnappia painettu.
-extern volatile byte buttonNumber;              // for buttons interrupt handler
 volatile bool newTimerInterrupt = false;        // for timer interrupt handler muutetaan kun tulee timer keskeytys
+extern volatile byte buttonNumber;              // for buttons interrupt handler
 extern volatile byte buttonPinInterrupted;      // Pinni joka muutti tilaansa
 volatile static byte interruptCount = 0;        // Lasketaan keskeytyksiä
 volatile static byte interruptCountTotal = 0;   // Lasketaan keskeytyksien kokonaismäärä. 99 kipattava? vaiko pisteet alas ja uutta sataa lasiin?
@@ -20,7 +20,6 @@ byte randomizedLedIndex = 0;                    // Lasketaan satunnaister numero
 unsigned long startButtonPressTime = 0;         // Start napin painalluksen aika. Virran säästöä varten. 
 bool startButtonDown = false;                   // Katsoo onko start nappi painettuna. Virran säästöä varten.
 
-extern uint32_t pcintCounter;
 
 void setup()
 {
@@ -46,7 +45,7 @@ void loop()
         startButtonDown = true;
         startButtonPressTime = millis(); 
     }
-    if (startButtonDown && digitalRead(10) == HIGH) {    // Pinni 10 on HIGH, eli nappi vapautettiin
+    if (startButtonDown && digitalRead(pins[4]) == HIGH) {    // Pinni indeksissä 4 on HIGH, eli nappi vapautettiin
     unsigned long startButtonDownTime = millis() - startButtonPressTime;
 
     // start the game if buttonNumber == 4
@@ -186,7 +185,7 @@ void interruptHandler() {
 }
 
 void startSleep() {
-  while (digitalRead(10) == LOW) {  // Odotetaan, että start nappi vapautetaan ennen nukkumaanmenoa
+  while (digitalRead(pins[4]) == LOW) {  // Odotetaan, että start nappi vapautetaan ennen nukkumaanmenoa
     delay(10);
   }
   
